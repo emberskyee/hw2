@@ -61,7 +61,14 @@ public:
 	}
 
 	// Constructors
-	Player(int money = 100) : money(money) {}
+	Player(int startMoney = 100, int min = 1, int max = 10) : money(startMoney), wheel(min, max) {}
+
+	char chooseAction() {
+		char choice;
+		cout << "Choose your action: (d)ouble, (h)alve, (k)eep: ";
+		cin >> choice;
+		return choice;
+	}
 };
 
 int main() {
@@ -89,15 +96,15 @@ int main() {
 	cout << "Maximum value: " << endl;
 	cin >> max;
 
-	int range = (max - min) + 1; // Add one to range to obtain the actual amount of slots on the wheel.
-	while (range < 6 || range > 20) {
+	//int range = (max - min) + 1; // Add one to range to obtain the actual amount of slots on the wheel.
+	while (min > max || max - min + 1 < 6 || max - min + 1 > 20) {
 		cout << "Range of numbers is too small or too large. Please pick a range that is at least 6 and at most 20: " << endl;
 		cout << "Minimum value: " << endl;
 		cin >> min;
 		cout << "Maximum value: " << endl;
 		cin >> max;
 
-		range = (max - min) + 1; // Recalculate range each time to avoid infinite loop
+	//	range = (max - min) + 1; // Recalculate range each time to avoid infinite loop
 	}
 
 	player.setRange(min, max);
@@ -125,8 +132,8 @@ int main() {
 		cout << "How much would you like to bet? " << endl;
 		cin >> playerBet;
 
-		while (playerBet < 0 & cin.fail()) {
-			cout << "Please enter a positive integer: " << endl;
+		while (playerBet < 0 | cin.fail() | playerBet > player.getMoney()) {
+			cout << "Please enter a positive integer that is less than your current balance: " << endl;
 			cin >> playerBet;
 		}
 
