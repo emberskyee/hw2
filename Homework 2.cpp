@@ -1,7 +1,7 @@
 // Homework #2: Ember Roberts, Nyla Spencer, Tahreem Khan
 #include <iostream>
-#include <string>
-#include <random>
+#include <cstdlib>
+#include <ctime>
 using namespace std;
 
 class Wheel {
@@ -10,22 +10,25 @@ private:
 	int maxValue;
 public:
 	int spin() {
-		int range = maxValue - minValue;
-		return minValue + (rand() % range + 1);
+		return minValue + rand() % ((maxValue - minValue) + 1); //tahreem changed the 
 	}
 	// Getters (accessors)
-	int getMin() {
-		return minValue;
+	void setRange(int minValue, int maxValue){
+		minValue = minValue;
+		maxValue = maxValue;
 	}
 	int getMax() {
 		return maxValue;
+	}
+	int getMin() {
+		return minValue;
 	}
 	// Setters (mutators)
 	void setRange(int min, int max) {
 		minValue = min;
 		maxValue = max;
 	}
-	
+
 	// Default constructor, with default range being 1 to 10
 	Wheel(int minValue = 1, int maxValue = 10) : minValue(minValue), maxValue(maxValue) {}
 };
@@ -33,7 +36,6 @@ public:
 class Player {
 private:
 	int money{};
-	int bet{};
 	Wheel wheel;
 
 public:
@@ -45,9 +47,6 @@ public:
 	int getMoney() {
 		return money;
 	}
-	int getBet() {
-		return bet;
-	}
 	int getWheel() {
 		int slots = (wheel.getMax() - wheel.getMin()) + 1;
 		return slots;
@@ -57,15 +56,12 @@ public:
 	void setMoney(int value) { // For loss of points, main function will have code that enters a negative value into the function
 		money += value;
 	}
-	void setBet(int value) {
-
-	}
 	void setRange(int min, int max) {
 		wheel.setRange(min, max);
 	}
 
 	// Constructors
-	Player(int money = 0) : money(money) {}
+	Player(int money = 100) : money(money) {}
 };
 
 int main() {
@@ -105,6 +101,57 @@ int main() {
 
 	player.setRange(min, max);
 	//cout << player.getWheel() << endl; this line is just for testing
+
+	char continuePlaying;
+	bool lost = false;
+	do {
+		int playerSpin = 0;
+		int houseSpin = 0;
+		// Ask for bet
+		double playerBet = 0.0;
+		cout << "How much would you like to bet? " << endl;
+		cin >> playerBet;
+
+		while (playerBet < 0 & cin.fail()) {
+			cout << "Please enter a positive integer: " << endl;
+			cin >> playerBet;
+		}
+
+		playerSpin = player.spinWheel();
+		houseSpin = house.spin();
+
+		int changeBet = 0;
+		cout << "Your wheel landed on: " << playerSpin << endl;
+		cout << "Would you like to change your bet?\n " << "1. Don't change\n2. Double bet\n3. Cut bet in half" << endl;
+		cin >> changeBet;
+
+		if (changeBet == 2) {
+			playerBet *= 2;
+		}
+		else if (changeBet == 3) {
+			playerBet /= 2;
+		}
+
+		if (playerSpin > houseSpin) {
+			cout << "House wheel landed on: " << houseSpin << endl;
+			cout << "You won this round! +$" << playerBet << endl;
+		}
+		else {
+			cout << "House wins the round!\n" << "House spin: " << houseSpin << "\nYour spin: " << playerSpin << endl;
+			cout << "-$" << playerBet << endl;
+		}
+
+		if (player.getMoney() <= 0) {
+			lost = true;
+			cout << "You lost all of your money! Better luck next time. " << endl;
+			cout << "********************************* GAME OVER *********************************" << endl;
+		}
+		else {
+			cout << "Would you like to continue playing? (y/n)" << endl;
+			cin >> continuePlaying;
+		}
+		continuePlaying = tolower(continuePlaying);
+	} while (continuePlaying == 'y' & (!lost));
 
 	return 0;
 }
