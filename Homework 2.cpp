@@ -72,6 +72,7 @@ int main() {
 	bool hardMode;
 
 	cout << "********************************* GAME START *********************************" << endl;
+	cout << "Starting amount : $" << player.getMoney() << endl;
 	cout << "Would you like to play on HARD mode?" << endl << "1. Yes\n0. No\n";
 	cin >> hardMode;
 
@@ -109,6 +110,18 @@ int main() {
 		int houseSpin = 0;
 		// Ask for bet
 		double playerBet = 0.0;
+
+		int choice = 0;
+
+		cout << "What would you like to do?\n" << "1. See money\n2. Make a bet\n" << endl;
+		cin >> choice;
+
+		while (choice == 1) {
+			cout << "Player balance: $" << player.getMoney() << endl;
+			cout << "What would you like to do?\n" << "1. See money\n2. Make a bet\n" << endl;
+			cin >> choice;
+		}
+
 		cout << "How much would you like to bet? " << endl;
 		cin >> playerBet;
 
