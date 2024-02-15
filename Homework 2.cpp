@@ -5,6 +5,10 @@
 #include <windows.h> // included for the Sleep() function
 using namespace std;
 
+/*NOTE:  i've emailed professor to clarify 
+some of the instructions so this code may not 
+be final based on his response.*/
+
 class Wheel {
 protected:
 	int minValue;
@@ -29,12 +33,6 @@ public:
 		minValue = min;
 		maxValue = max;
 	}
-	void setWins(int value) {
-		if (winsInARow == 2) {
-			winsInARow = 0;
-		}
-		winsInARow += value;
-	}
 	// Default constructor, with default range being 1 to 10, and desctructor
 	Wheel(int minValue = 1, int maxValue = 10, int winsInARow = 0) : minValue(minValue), maxValue(maxValue), winsInARow(winsInARow) {}
 	~Wheel() {}
@@ -44,14 +42,24 @@ class hardWheel : public Wheel {
 public:
 	int spin(int playerSpin) {
 		int spinValue = minValue + (rand() % ((maxValue - minValue) + 1));
-		if ((playerSpin < spinValue) && (winsInARow == 2) && ((maxValue - minValue) >=6) && ((maxValue - minValue) <= 20))  {
-			minValue++; 
+		if (((playerSpin < spinValue) || playerSpin == spinValue) && ((winsInARow % 2) == 0) && (winsInARow != 0) && (((maxValue - minValue) + 1) >= 6) && (((maxValue - minValue) + 1) <= 20)) {
+			minValue++;
+			winsInARow++;
+			cout << "House won twice in a row! Decreasing number of slots on house's wheel.\n"; // remove later
+			cout << (winsInARow % 2) << endl; // remove later
 		} 
 		else if ((playerSpin > spinValue) && (minValue > 0)) {
 			minValue--;
+			winsInARow = 0;
+			cout << "House lost! Increasing number of slots on house's wheel.\n"; // remove later
 		}
 		else if ((playerSpin > spinValue) && (minValue == 0)) {
 			maxValue++;
+			winsInARow = 0;
+			cout << "House lost! Increasing number of slots on house's wheel.\n"; // remove later
+		}
+		else if (playerSpin == spinValue) {
+			winsInARow++;
 		}
 		cout << "House values: " << minValue << ", " << maxValue << endl; // This line is for testing hard mode
 		return spinValue;
@@ -125,7 +133,7 @@ int main() {
 
 	int range = (max - min) + 1; // Add one to range to obtain the actual amount of slots on the wheel.
 	while (range < 6 || range > 20) {
-		cout << "Range of numbers is too small or too large. Please pick a range that is at least 6 and at most 20: " << endl;
+		cout << "Range of numbers is too small or too large. Please pick a range that is at least 6 and at most 20: " << endl; // this loop is causing an infinite output if the input is not a number. fix
 		cout << "Minimum value: " << endl;
 		cin >> min;
 		cout << "Maximum value: " << endl;
@@ -214,7 +222,7 @@ int main() {
 			cout << "\nYou won the round!\n" << "House spin: " << houseSpin << "\nYour spin: " << playerSpin << endl;
 			cout << "\n+$" << playerBet << endl;
 			player.setMoney(playerBet);
-			house->setWins(-house->getWins());
+			cout << house->getWins() << endl; // remove later
 		}
 		else if (playerSpin == houseSpin) {
 			cout << "\nThe house is spinning..." << endl;
@@ -222,7 +230,7 @@ int main() {
 			cout << "\nRound resulted in a tie! The house wins all ties.\n" << "House spin: " << houseSpin << "\nYour spin: " << playerSpin << endl;
 			cout << "\n-$" << playerBet << endl;
 			player.setMoney(-playerBet);
-			house->setWins(1);
+			cout << house->getWins() << endl; // remove later
 		}
 		else {
 			cout << "\nThe house is spinning..." << endl;
@@ -230,7 +238,7 @@ int main() {
 			cout << "\nThe house won the round!\n" << "House spin: " << houseSpin << "\nYour spin: " << playerSpin << endl;
 			cout << "\n-$" << playerBet << endl;
 			player.setMoney(-playerBet);
-			house->setWins(1);
+			cout << house->getWins() << endl; // remove later
 		}
 
 		if (player.getMoney() <= 0) {
@@ -241,7 +249,7 @@ int main() {
 			cout << "\nWould you like to continue playing? (y/n)" << endl;
 			cin >> continuePlaying;
 		}
-
+		cout << "House values: " << house->getMin() << ", " << house->getMax() << endl; // This line is for testing hard mode, remove later
 	} while ((continuePlaying == 'y' || continuePlaying == 'Y') && (player.getMoney() > 0));
 
 	delete house;
