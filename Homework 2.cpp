@@ -10,7 +10,8 @@ protected:
 	int minValue;
 	int maxValue;
 	int winsInARow; // For tracking how many wins the house has in a row, necessary for hard mode
-	bool firstAttempt{ false }; // This is here to track whether or not the player has changed their bet for the functionality of hard mode and 2 in a row tries
+	bool firstAttemptDbl{ false }; // Line 13 is for when the player chooses to double, line 14 is for when they choose to halve bet
+	bool firstAttemptHalf{ false }; // These are here to track whether or not the player has changed their bet for the functionality of hard mode and 2 in a row tries
 	// Without the above code the two tries would be counted separately
 public:
 	virtual int spin(int playerSpin) {
@@ -31,14 +32,18 @@ public:
 		minValue = min;
 		maxValue = max;
 	}
-	void incrementWins() {
-		winsInARow++;
+	void setWins(int value) {
+		winsInARow += value;
 	}
-	void setAttempt(bool TorF) {
-		firstAttempt = TorF;
+	void setAttemptDbl(bool TorF) {
+		firstAttemptDbl = TorF;
+	}
+	void setAttemptHalf(bool TorF) {
+		firstAttemptHalf = TorF;
 	}
 	// Default constructor, with default range being 1 to 10, and desctructor
-	Wheel(int minValue = 1, int maxValue = 10, int winsInARow = 0, bool firstAttempt = false) : minValue(minValue), maxValue(maxValue), winsInARow(winsInARow), firstAttempt(firstAttempt) {}
+	Wheel(int minValue = 1, int maxValue = 10, int winsInARow = 0, bool firstAttempt = false) : 
+		minValue(minValue), maxValue(maxValue), winsInARow(winsInARow), firstAttemptDbl(firstAttempt), firstAttemptHalf(firstAttempt) {}
 	~Wheel() {}
 };
 
@@ -46,14 +51,14 @@ class hardWheel : public Wheel {
 public:
 	int spin(int playerSpin) {
 		int spinValue = minValue + (rand() % ((maxValue - minValue) + 1));
-		if ((playerSpin < spinValue) || (playerSpin == spinValue)) {
+		if (((playerSpin < spinValue) || (playerSpin == spinValue)) && (!(firstAttemptHalf))) {
 			winsInARow++;
 			if (((winsInARow % 2) == 0) && (winsInARow != 0) && (((maxValue - minValue) + 1) >= 6) && (((maxValue - minValue) + 1) <= 20)) {
 				maxValue--;
 				cout << "\nHouse won twice in a row! Decreasing values on house's wheel..." << endl;
 			}
 		}
-		else if ((playerSpin > spinValue) && (((maxValue - minValue) + 1) >= 6) && (((maxValue - minValue) + 1) <= 20) && !(firstAttempt)) {
+		else if ((playerSpin > spinValue) && (((maxValue - minValue) + 1) >= 6) && (((maxValue - minValue) + 1) <= 20) && !(firstAttemptDbl)) {
 			maxValue++;
 			winsInARow = 0;
 			cout << "\nHouse lost! Increasing number of slots on house's wheel...\n";
@@ -152,12 +157,12 @@ int main() {
 		double playerBet = 0.0;
 		int choice = 0;
 
-		cout << "\nWhat would you like to do?\n" << "1. See money\n2. Make a bet" << endl;
+		cout << "\nWhat would you like to do?\n" << "1. See balance\n2. Make a bet" << endl;
 		cin >> choice;
 
 		while (choice == 1) {
 			cout << "\nPlayer balance: $" << player.getMoney() << endl;
-			cout << "\nWhat would you like to do?\n" << "1. See money\n2. Make a bet" << endl;
+			cout << "\nWhat would you like to do?\n" << "1. See balance\n2. Make a bet" << endl;
 			cin >> choice;
 		}
 
@@ -197,14 +202,8 @@ int main() {
 		else if (changeBet == 2) {
 			playerBet *= 2;
 			cout << "\nBet doubled. New bet: $" << playerBet << endl;
-		}
-		else if (changeBet == 3) {
-			playerBet /= 2;
-			cout << "\nBet halved. New bet: $" << playerBet << endl;
-		}
 
-		if (changeBet == 2 || changeBet == 3) {
-			house->setAttempt(true);
+			house->setAttemptDbl(true);
 			cout << "\nThe house now has two chances to beat you!" << endl;
 			cout << "\nFirst attempt..." << endl;
 			Sleep(2000);
@@ -214,9 +213,38 @@ int main() {
 			else {
 				houseSpin = house->Wheel::spin(playerSpin);
 			}
-			house->setAttempt(false);
+			house->setAttemptDbl(false);
 			if (playerSpin > houseSpin) {
 				cout << "\nHouse lost! Final attempt..." << endl;
+				Sleep(2000);
+				if (hardMode) {
+					houseSpin = house->spin(playerSpin);
+				}
+				else {
+					houseSpin = house->Wheel::spin(playerSpin);
+				}
+			}
+		}
+		else if (changeBet == 3) {
+			playerBet /= 2;
+
+			house->setAttemptHalf(true);
+			cout << "\nBet halved. New bet: $" << playerBet << endl;
+			cout << "\nThe house will win now have to spin twice in a row. House wins the round if it wins both of its tries." << endl;
+			cout << "\nFirst attempt..." << endl;
+			Sleep(2000);
+			if (hardMode) {
+				houseSpin = house->spin(playerSpin);
+			}
+			else {
+				houseSpin = house->Wheel::spin(playerSpin);
+			}
+			house->setAttemptHalf(false);
+			if (playerSpin > houseSpin) {
+				continue;
+			}
+			else {
+				cout << "\nHouse won first attempt! Final attempt..." << endl;
 				Sleep(2000);
 				if (hardMode) {
 					houseSpin = house->spin(playerSpin);
