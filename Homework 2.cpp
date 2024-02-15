@@ -3,99 +3,11 @@
 #include <cstdlib> // Lines 3 and 4 are for seeding the random number generator
 #include <ctime>
 #include <windows.h> // included for the Sleep() function
+
+#include "wheels.h" // Including files where the classes are declared
+#include "player.h"
+
 using namespace std;
-
-class Wheel {
-protected:
-	int minValue;
-	int maxValue;
-	int winsInARow; // For tracking how many wins the house has in a row, necessary for hard mode
-	bool firstAttemptDbl{ false }; // Line 13 is for when the player chooses to double, line 14 is for when they choose to halve bet
-	bool firstAttemptHalf{ false }; // These are here to track whether or not the player has changed their bet for the functionality of hard mode and 2 in a row tries
-	// Without the above code the two tries would be counted separately
-public:
-	virtual int spin(int playerSpin) {
-		return minValue + (rand() % ((maxValue - minValue) + 1)); // This line calculates a random number between the min and max;
-	}
-	// Getters (accessors)
-	int getMax() {
-		return maxValue;
-	}
-	int getMin() {
-		return minValue;
-	}
-	int getWins() {
-		return winsInARow;
-	}
-	// Setters (mutators)
-	void setRange(int min, int max) {
-		minValue = min;
-		maxValue = max;
-	}
-	void setWins(int value) {
-		winsInARow += value;
-	}
-	void setAttemptDbl(bool TorF) {
-		firstAttemptDbl = TorF;
-	}
-	void setAttemptHalf(bool TorF) {
-		firstAttemptHalf = TorF;
-	}
-	// Default constructor, with default range being 1 to 10, and desctructor
-	Wheel(int minValue = 1, int maxValue = 10, int winsInARow = 0, bool firstAttempt = false) : 
-		minValue(minValue), maxValue(maxValue), winsInARow(winsInARow), firstAttemptDbl(firstAttempt), firstAttemptHalf(firstAttempt) {}
-	~Wheel() {}
-};
-
-class hardWheel : public Wheel {
-public:
-	int spin(int playerSpin) {
-		int spinValue = minValue + (rand() % ((maxValue - minValue) + 1));
-		if (((playerSpin < spinValue) || (playerSpin == spinValue)) && (!(firstAttemptHalf))) {
-			winsInARow++;
-			if (((winsInARow % 2) == 0) && (winsInARow != 0) && (((maxValue - minValue) + 1) >= 6) && (((maxValue - minValue) + 1) <= 20)) {
-				maxValue--;
-				cout << "\nHouse won twice in a row! Decreasing values on house's wheel..." << endl;
-			}
-		}
-		else if ((playerSpin > spinValue) && (((maxValue - minValue) + 1) >= 6) && (((maxValue - minValue) + 1) <= 20) && !(firstAttemptDbl)) {
-			maxValue++;
-			winsInARow = 0;
-			cout << "\nHouse lost! Increasing number of slots on house's wheel...\n";
-		}
-		return spinValue;
-	}
-	// Constructors and destructor
-	hardWheel(int minValue = 1, int maxValue = 10, int winsInARow = 0) : Wheel(minValue, maxValue, winsInARow) {}
-	~hardWheel() {}
-};
-
-class Player {
-private:
-	double money{};
-	Wheel wheel;
-
-public:
-	int spinWheel() {
-		return wheel.Wheel::spin(0);
-	}
-	// Getters (accessors)
-	int getMoney() {
-		return money;
-	}
-	// Setters (mutators)
-	void setMoney(double value) { // For loss of points, main function will have code that enters a negative value into the function
-		money += value;
-	}
-	void setRange(int min, int max) {
-		wheel.setRange(min, max);
-	}
-	// Constructor to set money to 0 by default, and destructor for outputting cash out amount at the end
-	Player(double startingMoney = 0.0) : money(startingMoney) {}
-	~Player() {
-		cout << "\nThanks for playing!\n" << "Final cash out: $" << money << endl;
-	}
-};
 
 int main() {
 	int min;
@@ -104,6 +16,8 @@ int main() {
 	Wheel* house;
 	Player player;
 	bool hardMode;
+
+	srand(time(0)); // Used to seed random number generator each time code is ran to ensure completely random results
 
 	cout << "********************************* GAME START *********************************" << endl;
 	cout << "How much money would you like to deposit to start with?\n";
@@ -144,8 +58,6 @@ int main() {
 
 		range = (max - min) + 1; // Recalculate range each time to avoid infinite loop
 	}
-
-	srand(time(0)); // Used to seed random number generator each time code is ran to ensure completely random results
 
 	player.setRange(min, max);
 	house->setRange(min, max); // In normal mode house will have same values as player throughout, in hard it will have the same at the beginning
@@ -240,10 +152,7 @@ int main() {
 				houseSpin = house->Wheel::spin(playerSpin);
 			}
 			house->setAttemptHalf(false);
-			if (playerSpin > houseSpin) {
-				continue;
-			}
-			else {
+			if (playerSpin < houseSpin) {
 				cout << "\nHouse won first attempt! Final attempt..." << endl;
 				Sleep(2000);
 				if (hardMode) {
@@ -284,7 +193,7 @@ int main() {
 			cout << "\nValues on house's wheel: " << house->getMin() << " - " << house->getMax() << endl;
 		}
 	} while ((continuePlaying == 'y' || continuePlaying == 'Y') && (player.getMoney() > 0));
-
+	player.setGameStatus(true);
 	delete house;
 	return 0;
 }
